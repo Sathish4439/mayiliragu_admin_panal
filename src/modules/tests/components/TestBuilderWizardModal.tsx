@@ -1,0 +1,700 @@
+import { useState, useEffect, useMemo } from 'react';
+import { 
+  X, 
+  ChevronRight, 
+  ChevronLeft, 
+  Search, 
+  Plus, 
+  Trash2, 
+  ArrowUp, 
+  ArrowDown, 
+  BookOpen, 
+  Settings, 
+  CheckCircle,
+  HelpCircle,
+  Clock,
+  Award,
+  Sparkles
+} from 'lucide-react';
+import { useQuestionsList } from '../../../core/api/endpoints';
+import { useTestsStore } from '../store/tests-store';
+import type { Question, Test } from '../../../core/types';
+
+interface TestBuilderWizardModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: any) => Promise<void>;
+  test?: Test;
+}
+
+export default function TestBuilderWizardModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  test
+}: TestBuilderWizardModalProps) {
+  const [step, setStep] = useState(1);
+  const { categories, subjects, topics } = useTestsStore();
+
+  // Step 1: Metadata State
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [duration, setDuration] = useState(60);
+  const [cutoffMarks, setCutoffMarks] = useState(35);
+  const [categoryId, setCategoryId] = useState('');
+  const [subjectId, setSubjectId] = useState('');
+  const [topicId, setTopicId] = useState('');
+  const [isPublished, setIsPublished] = useState(false);
+
+  // Step 2: Selected Questions State
+  // Array of questions in order
+  const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
+
+  // Step 2 Filters
+  const [repoSubject, setRepoSubject] = useState('all');
+  const [repoType, setRepoType] = useState('all');
+  const [repoDifficulty, setRepoDifficulty] = useState('all');
+  const [repoSearch, setRepoSearch] = useState('');
+  const [randomCount, setRandomCount] = useState(5);
+
+  // Fetch all questions matching filters
+  const { data: repositoryQuestions = [], isLoading: isRepoLoading } = useQuestionsList({
+    subject: repoSubject !== 'all' ? repoSubject : undefined,
+    type: repoType !== 'all' ? repoType : undefined,
+    difficulty: repoDifficulty !== 'all' ? repoDifficulty : undefined,
+  });
+
+  // Client side search matching
+  const filteredRepoQuestions = useMemo(() => {
+    return repositoryQuestions.filter((q) => {
+      if (!repoSearch) return true;
+      const searchLower = repoSearch.toLowerCase();
+      return (
+        q.question_text_en.toLowerCase().includes(searchLower) ||
+        (q.question_text_ta && q.question_text_ta.toLowerCase().includes(searchLower))
+      );
+    });
+  }, [repositoryQuestions, repoSearch]);
+
+  // Load test if editing
+  useEffect(() => {
+    if (test) {
+      setTitle(test.title);
+      setDescription(test.description || '');
+      setDuration(test.duration);
+      setCutoffMarks(test.cutoff_marks);
+      setCategoryId(test.category_id || '');
+      setSubjectId(test.subject_id || '');
+      setTopicId(test.topic_id || '');
+      setIsPublished(test.is_published);
+      if (test.questions) {
+        // Sort by order and set
+        const sorted = [...test.questions].sort((a, b) => a.order - b.order);
+        setSelectedQuestions(sorted);
+      }
+    } else {
+      // Reset
+      setTitle('');
+      setDescription('');
+      setDuration(60);
+      setCutoffMarks(35);
+      setCategoryId('');
+      setSubjectId('');
+      setTopicId('');
+      setIsPublished(false);
+      setSelectedQuestions([]);
+      setStep(1);
+    }
+  }, [test, isOpen]);
+
+  // Dynamic sum of correct marks
+  const totalMarks = useMemo(() => {
+    return selectedQuestions.reduce((sum, q) => sum + (q.marks?.correct || 0), 0);
+  }, [selectedQuestions]);
+
+  const handleAddQuestion = (q: Question) => {
+    if (selectedQuestions.some((item) => item.id === q.id)) return;
+    setSelectedQuestions([...selectedQuestions, q]);
+  };
+
+  const handleRemoveQuestion = (id: string) => {
+    setSelectedQuestions(selectedQuestions.filter((q) => q.id !== id));
+  };
+
+  const handleMoveUp = (idx: number) => {
+    if (idx === 0) return;
+    const newItems = [...selectedQuestions];
+    const temp = newItems[idx];
+    newItems[idx] = newItems[idx - 1];
+    newItems[idx - 1] = temp;
+    setSelectedQuestions(newItems);
+  };
+
+  const handleMoveDown = (idx: number) => {
+    if (idx === selectedQuestions.length - 1) return;
+    const newItems = [...selectedQuestions];
+    const temp = newItems[idx];
+    newItems[idx] = newItems[idx + 1];
+    newItems[idx + 1] = temp;
+    setSelectedQuestions(newItems);
+  };
+
+  const handleAddRandom = () => {
+    const unselected = filteredRepoQuestions.filter(
+      (q) => !selectedQuestions.some((selected) => selected.id === q.id)
+    );
+
+    // Shuffle and pick
+    const shuffled = [...unselected].sort(() => 0.5 - Math.random());
+    const toAdd = shuffled.slice(0, randomCount);
+    setSelectedQuestions([...selectedQuestions, ...toAdd]);
+  };
+
+  const handleNext = () => {
+    if (step === 1 && !title.trim()) {
+      alert('Test Title is required');
+      return;
+    }
+    if (step === 2 && selectedQuestions.length === 0) {
+      alert('Please select at least one question for this test');
+      return;
+    }
+    setStep(step + 1);
+  };
+
+  const handlePrev = () => {
+    setStep(step - 1);
+  };
+
+  const handleSave = async () => {
+    const questionsPayload = selectedQuestions.map((q, idx) => ({
+      questionId: q.id,
+      order: idx
+    }));
+
+    const payload = {
+      title,
+      description,
+      duration: Number(duration),
+      cutoff_marks: Number(cutoffMarks),
+      total_marks: totalMarks,
+      course_id: null,
+      module_id: null,
+      category_id: categoryId || null,
+      subject_id: subjectId || null,
+      topic_id: topicId || null,
+      is_published: isPublished,
+      questions: questionsPayload
+    };
+
+    await onSubmit(payload);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-5xl h-[88vh] bg-cardBg border border-border/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+        
+        {/* Header */}
+        <div className="p-6 border-b border-border/45 flex items-center justify-between bg-slate-50/50">
+          <div>
+            <h3 className="text-base font-extrabold text-text-primary tracking-tight">
+              {test ? 'Edit Test' : 'Test Builder Wizard'}
+            </h3>
+            <p className="text-xs text-text-secondary font-medium mt-0.5">
+              Compile quiz templates, configure difficulty taxonomy, and publish test questions.
+            </p>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-1.5 rounded-xl hover:bg-slate-100 text-gray-400 hover:text-text-primary transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Wizard Steps indicator */}
+        <div className="flex border-b border-border/20 bg-slate-50/20 px-8 py-3 text-xs font-bold text-text-secondary">
+          {[
+            { num: 1, label: 'Metadata & Scope', icon: Settings },
+            { num: 2, label: 'Question Bank Selector', icon: BookOpen },
+            { num: 3, label: 'Review & Publish', icon: CheckCircle }
+          ].map((s) => (
+            <div 
+              key={s.num} 
+              className={`flex items-center space-x-2 mr-12 transition-colors ${
+                step === s.num ? 'text-accent' : step > s.num ? 'text-emerald-600' : ''
+              }`}
+            >
+              <s.icon className="w-4 h-4" />
+              <span>Step {s.num}: {s.label}</span>
+              {s.num < 3 && <span className="text-gray-300 ml-4 font-normal">/</span>}
+            </div>
+          ))}
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-hidden min-h-0 flex flex-col p-6">
+          
+          {/* STEP 1: METADATA & SCOPE */}
+          {step === 1 && (
+            <div className="flex-1 overflow-y-auto space-y-6 max-w-2xl mx-auto w-full py-4">
+              <div className="space-y-4">
+                
+                {/* Title */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-extrabold text-text-primary uppercase tracking-wider">Test Title</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. UPSC Prelims - Indian Polity Quiz 1"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-bold text-text-primary bg-slate-50/20"
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-extrabold text-text-primary uppercase tracking-wider">Description</label>
+                  <textarea
+                    placeholder="Provide overview details, syllabus covered, instructions for students..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-semibold text-text-primary bg-slate-50/20"
+                  />
+                </div>
+
+                {/* Duration & Cutoff */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-extrabold text-text-primary uppercase tracking-wider flex items-center">
+                      <Clock className="w-3.5 h-3.5 mr-1 text-accent" />
+                      <span>Duration (Minutes)</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={duration}
+                      onChange={(e) => setDuration(Math.max(1, Number(e.target.value)))}
+                      required
+                      className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-bold text-text-primary bg-slate-50/20"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-extrabold text-text-primary uppercase tracking-wider flex items-center">
+                      <Award className="w-3.5 h-3.5 mr-1 text-accent" />
+                      <span>Passing / Cutoff Score (%)</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={cutoffMarks}
+                      onChange={(e) => setCutoffMarks(Math.max(0, Number(e.target.value)))}
+                      required
+                      className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-bold text-text-primary bg-slate-50/20"
+                    />
+                  </div>
+                </div>
+
+                {/* Scope connections */}
+                <div className="border-t border-border/40 pt-4 space-y-4">
+                  <h4 className="text-xs font-extrabold text-text-primary uppercase tracking-wider flex items-center">
+                    <Sparkles className="w-3.5 h-3.5 mr-1 text-accent" />
+                    <span>Associate with Syllabus Connect</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Category */}
+                    <div className="space-y-1.5">
+                      <label className="block text-[10px] font-extrabold text-text-secondary uppercase tracking-wider">Exam Category</label>
+                      <select
+                        value={categoryId}
+                        onChange={(e) => {
+                          setCategoryId(e.target.value);
+                          setSubjectId('');
+                          setTopicId('');
+                        }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-bold text-text-secondary bg-slate-50/20"
+                      >
+                        <option value="">None / General</option>
+                        {categories.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Subject */}
+                    <div className="space-y-1.5">
+                      <label className="block text-[10px] font-extrabold text-text-secondary uppercase tracking-wider">Subject</label>
+                      <select
+                        value={subjectId}
+                        onChange={(e) => {
+                          setSubjectId(e.target.value);
+                          setTopicId('');
+                        }}
+                        disabled={!categoryId}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-bold text-text-secondary bg-slate-50/20 disabled:opacity-50"
+                      >
+                        <option value="">Select Subject</option>
+                        {subjects
+                          .filter((s) => s.categoryId === categoryId)
+                          .map((s) => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                      </select>
+                    </div>
+
+                    {/* Topic */}
+                    <div className="space-y-1.5">
+                      <label className="block text-[10px] font-extrabold text-text-secondary uppercase tracking-wider">Topic</label>
+                      <select
+                        value={topicId}
+                        onChange={(e) => setTopicId(e.target.value)}
+                        disabled={!subjectId}
+                        className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-bold text-text-secondary bg-slate-50/20 disabled:opacity-50"
+                      >
+                        <option value="">Select Topic</option>
+                        {topics
+                          .filter((t) => t.subjectId === subjectId)
+                          .map((t) => (
+                            <option key={t.id} value={t.id}>{t.name}</option>
+                          ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: SPLIT-PANE WORKSPACE SELECTOR */}
+          {step === 2 && (
+            <div className="flex-1 flex overflow-hidden min-h-0 gap-6">
+              
+              {/* Left repository list */}
+              <div className="w-1/2 border border-border/45 rounded-2xl bg-slate-50/10 flex flex-col overflow-hidden">
+                <div className="p-4 border-b border-border/40 space-y-3 bg-slate-50/35">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-extrabold text-text-primary uppercase tracking-wider flex items-center">
+                      <BookOpen className="w-3.5 h-3.5 mr-1 text-accent" />
+                      <span>Question Repository</span>
+                    </h4>
+                    <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-md font-bold text-text-secondary">
+                      {filteredRepoQuestions.length} Matches
+                    </span>
+                  </div>
+
+                  {/* Filter Toolbar */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <select
+                      value={repoSubject}
+                      onChange={(e) => setRepoSubject(e.target.value)}
+                      className="px-2 py-1 bg-white border border-border/60 rounded-lg text-[10px] font-bold text-text-secondary outline-none focus:border-accent"
+                    >
+                      <option value="all">All Subjects</option>
+                      {subjects.map((s) => (
+                        <option key={s.id} value={s.name}>{s.name}</option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={repoType}
+                      onChange={(e) => setRepoType(e.target.value)}
+                      className="px-2 py-1 bg-white border border-border/60 rounded-lg text-[10px] font-bold text-text-secondary outline-none focus:border-accent"
+                    >
+                      <option value="all">All Types</option>
+                      <option value="single_choice">Single Choice</option>
+                      <option value="multi_choice">Multi-Select</option>
+                      <option value="true_false">True / False</option>
+                      <option value="fill_in_blank">Fill in Blank</option>
+                    </select>
+
+                    <select
+                      value={repoDifficulty}
+                      onChange={(e) => setRepoDifficulty(e.target.value)}
+                      className="px-2 py-1 bg-white border border-border/60 rounded-lg text-[10px] font-bold text-text-secondary outline-none focus:border-accent"
+                    >
+                      <option value="all">All Difficulty</option>
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <div className="relative flex-1">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search question text..."
+                        value={repoSearch}
+                        onChange={(e) => setRepoSearch(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 bg-white border border-border/70 rounded-xl text-[10px] font-bold text-text-primary outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    {/* Random auto-pick option */}
+                    <div className="flex items-center space-x-1 border border-dashed border-accent/40 bg-accent/5 px-2 py-1 rounded-lg">
+                      <input
+                        type="number"
+                        value={randomCount}
+                        onChange={(e) => setRandomCount(Math.max(1, Number(e.target.value)))}
+                        className="w-8 bg-white border border-border/60 rounded text-center text-[10px] font-bold py-0.5 outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddRandom}
+                        className="text-[9px] font-black text-accent uppercase tracking-wider"
+                      >
+                        Auto
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* List container */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {isRepoLoading ? (
+                    <div className="space-y-3 py-4">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="h-14 bg-slate-100 rounded-xl animate-pulse" />
+                      ))}
+                    </div>
+                  ) : filteredRepoQuestions.length === 0 ? (
+                    <div className="p-8 text-center text-gray-400 text-xs">
+                      No matching questions found in Repository.
+                    </div>
+                  ) : (
+                    filteredRepoQuestions.map((q) => {
+                      const isAdded = selectedQuestions.some((item) => item.id === q.id);
+                      return (
+                        <div 
+                          key={q.id}
+                          className={`p-3 border rounded-xl flex items-center justify-between gap-3 text-xs bg-cardBg transition-all ${
+                            isAdded ? 'border-emerald-300 bg-emerald-50/10' : 'border-border/60 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex-1 space-y-1 min-w-0">
+                            <p className="font-extrabold text-text-primary truncate">{q.question_text_en}</p>
+                            <div className="flex items-center space-x-2 text-[9px] font-bold text-text-secondary uppercase">
+                              <span>{q.type.replace('_', ' ')}</span>
+                              <span>•</span>
+                              <span>Marks: {q.marks?.correct || 1}</span>
+                              <span>•</span>
+                              <span className="text-accent">{q.difficulty}</span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleAddQuestion(q)}
+                            disabled={isAdded}
+                            className={`p-1.5 rounded-lg border flex items-center justify-center transition-all ${
+                              isAdded 
+                                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 cursor-not-allowed' 
+                                : 'bg-slate-50 border-slate-200 text-text-primary hover:border-accent hover:text-accent'
+                            }`}
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Right selected list */}
+              <div className="w-1/2 border border-border/45 rounded-2xl flex flex-col overflow-hidden">
+                <div className="p-4 border-b border-border/40 flex items-center justify-between bg-slate-50/25">
+                  <div>
+                    <h4 className="text-xs font-extrabold text-text-primary uppercase tracking-wider">
+                      Selected Quiz Content
+                    </h4>
+                    <p className="text-[10px] text-text-secondary font-medium mt-0.5">
+                      Total: {selectedQuestions.length} Questions ({totalMarks} Marks)
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] font-extrabold text-text-secondary uppercase">
+                      Cutoff: {((cutoffMarks / 100) * totalMarks).toFixed(1)} / {totalMarks}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Selected Questions re-order list */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+                  {selectedQuestions.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-2">
+                      <HelpCircle className="w-10 h-10 text-gray-300" />
+                      <p className="text-xs font-bold text-text-secondary">Workspace is empty</p>
+                      <p className="text-[10px] text-text-secondary max-w-[200px]">
+                        Add questions from the repository or click "Auto" to populate the test set.
+                      </p>
+                    </div>
+                  ) : (
+                    selectedQuestions.map((q, idx) => (
+                      <div 
+                        key={q.id}
+                        className="p-3 border border-border/60 rounded-xl bg-cardBg flex items-center justify-between gap-3 text-xs"
+                      >
+                        <span className="font-extrabold text-text-secondary w-4 text-center">{idx + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-extrabold text-text-primary truncate">{q.question_text_en}</p>
+                          <div className="flex items-center space-x-2 text-[9px] font-bold text-text-secondary uppercase">
+                            <span>{q.type.replace('_', ' ')}</span>
+                            <span>•</span>
+                            <span>{q.marks?.correct || 1} Marks</span>
+                          </div>
+                        </div>
+
+                        {/* Order rearrangement controls */}
+                        <div className="flex items-center space-x-1">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveUp(idx)}
+                            disabled={idx === 0}
+                            className="p-1 text-text-secondary hover:text-accent disabled:opacity-20 transition-colors"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveDown(idx)}
+                            disabled={idx === selectedQuestions.length - 1}
+                            className="p-1 text-text-secondary hover:text-accent disabled:opacity-20 transition-colors"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveQuestion(q.id)}
+                            className="p-1 text-text-secondary hover:text-rose-500 transition-colors ml-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* STEP 3: REVIEW & PUBLISH */}
+          {step === 3 && (
+            <div className="flex-1 overflow-y-auto space-y-6 max-w-xl mx-auto w-full py-4">
+              <div className="border border-border/65 rounded-2xl p-6 space-y-4 bg-slate-50/10">
+                <h4 className="text-xs font-black text-text-primary uppercase tracking-wider border-b border-border/40 pb-2">
+                  Test Specification Review
+                </h4>
+
+                <div className="grid grid-cols-2 gap-y-3 gap-x-6 text-xs font-medium text-text-secondary">
+                  <div>
+                    <span className="block text-[10px] font-bold text-text-secondary uppercase">Title</span>
+                    <span className="font-extrabold text-text-primary">{title}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] font-bold text-text-secondary uppercase">Duration</span>
+                    <span className="font-extrabold text-text-primary">{duration} Minutes</span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] font-bold text-text-secondary uppercase">Total Questions</span>
+                    <span className="font-extrabold text-text-primary">{selectedQuestions.length} Questions</span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] font-bold text-text-secondary uppercase">Total Marks</span>
+                    <span className="font-extrabold text-text-primary">{totalMarks} Marks</span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] font-bold text-text-secondary uppercase">Cutoff Percent</span>
+                    <span className="font-extrabold text-text-primary">{cutoffMarks}%</span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] font-bold text-text-secondary uppercase">Passing Score</span>
+                    <span className="font-extrabold text-text-primary">
+                      {((cutoffMarks / 100) * totalMarks).toFixed(1)} / {totalMarks} Marks
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t border-border/40 pt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h5 className="text-xs font-extrabold text-text-primary uppercase">Publish Test Profile</h5>
+                      <p className="text-[10px] text-text-secondary font-medium">
+                        If published, students will be able to take this assessment immediately.
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={isPublished}
+                        onChange={(e) => setIsPublished(e.target.checked)}
+                        className="sr-only peer" 
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent"></div>
+                    </label>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* Footer actions */}
+        <div className="p-4 bg-slate-50 border-t border-border/40 flex items-center justify-between">
+          <div>
+            {step > 1 && (
+              <button
+                type="button"
+                onClick={handlePrev}
+                className="px-4 py-2 bg-white border border-border hover:bg-slate-50 text-xs font-bold rounded-xl text-text-secondary flex items-center space-x-1.5 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Previous</span>
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-white border border-border hover:bg-slate-50 text-xs font-bold rounded-xl text-text-secondary transition-colors"
+            >
+              Cancel
+            </button>
+
+            {step < 3 ? (
+              <button
+                type="button"
+                onClick={handleNext}
+                className="px-4 py-2 bg-accent hover:bg-accent/90 text-white text-xs font-bold rounded-xl flex items-center space-x-1.5 transition-all shadow-md shadow-accent/15"
+              >
+                <span>Continue</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSave}
+                className="px-5 py-2 bg-accent hover:bg-accent-onContainer text-white text-xs font-bold rounded-xl shadow-md shadow-accent/15 transition-all"
+              >
+                {test ? 'Save Changes' : 'Create & Publish'}
+              </button>
+            )}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
