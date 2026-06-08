@@ -4,10 +4,12 @@ import {
   useQuestionsList,
   useCreateQuestion,
   useUpdateQuestion,
-  useDeleteQuestion
+  useDeleteQuestion,
+  useExamCategories,
+  useCreateSubject,
+  useCreateTopic
 } from '../../../core/api/endpoints';
-import { useTestsStore, type ExamSubject, type ExamTopic } from '../store/tests-store';
-import { type Question } from '../../../core/types';
+import { type Question, type ExamSubject, type ExamTopic } from '../../../core/types';
 import QuestionFormModal from '../components/QuestionFormModal';
 import ConfirmModal from '../../../shared/components/ConfirmModal';
 import { 
@@ -25,14 +27,18 @@ export default function CategoryDetailPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
 
-  // Zustand Store
-  const { 
-    categories, 
-    subjects, 
-    topics, 
-    addSubject, 
-    addTopic 
-  } = useTestsStore();
+  // Zustand Store replaced with API queries/mutations
+  const { data: categories = [] } = useExamCategories();
+  const createSubjectMutation = useCreateSubject();
+  const createTopicMutation = useCreateTopic();
+
+  const subjects = useMemo(() => {
+    return categories.flatMap((cat) => cat.subjects || []);
+  }, [categories]);
+
+  const topics = useMemo(() => {
+    return subjects.flatMap((sub) => sub.topics || []);
+  }, [subjects]);
 
   const currentCategory = useMemo(() => {
     return categories.find((c) => c.id === categoryId);
@@ -153,18 +159,18 @@ export default function CategoryDetailPage() {
     });
   }, [allQuestions, currentCategory, selectedSub, selectedTop]);
 
-  const handleCreateSubject = (e: React.FormEvent) => {
+  const handleCreateSubject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSubName || !categoryId) return;
-    addSubject(categoryId, newSubName);
+    await createSubjectMutation.mutateAsync({ categoryId, name: newSubName });
     setIsSubjectModalOpen(false);
     setNewSubName('');
   };
 
-  const handleCreateTopic = (e: React.FormEvent) => {
+  const handleCreateTopic = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTopName || !expandedSubId) return;
-    addTopic(expandedSubId, newTopName);
+    await createTopicMutation.mutateAsync({ subjectId: expandedSubId, name: newTopName });
     setIsTopicModalOpen(false);
     setNewTopName('');
   };
@@ -350,10 +356,11 @@ export default function CategoryDetailPage() {
                 className="px-2.5 py-1.5 bg-slate-50 border border-border/50 rounded-xl text-xs font-bold text-text-secondary outline-none focus:border-accent"
               >
                 <option value="All Types">All Types</option>
-                <option value="Single Choice">Single Choice</option>
-                <option value="Multi-Select">Multi-Select</option>
-                <option value="True / False">True / False</option>
-                <option value="Fill in the Blank">Fill in the Blank</option>
+                <option value="single_choice">Single Choice</option>
+                <option value="multi_choice">Multi-Select</option>
+                <option value="true_false">True / False</option>
+                <option value="fill_in_blank">Fill in the Blank</option>
+                <option value="descriptive">Descriptive</option>
               </select>
 
               <select

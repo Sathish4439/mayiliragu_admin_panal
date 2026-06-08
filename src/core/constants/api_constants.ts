@@ -38,6 +38,11 @@ export const ApiConstants = {
   tests: {
     base: '/tests',
     detail: (testId: string) => `/tests/${testId}`,
+    categories: '/tests/categories',
+    subjects: '/tests/subjects',
+    topics: '/tests/topics',
+    analytics: '/tests/analytics/stats',
+    attemptsAll: '/tests/attempts/all',
   },
   banners: {
     base: '/banners',

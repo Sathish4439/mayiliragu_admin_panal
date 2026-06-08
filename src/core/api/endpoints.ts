@@ -15,7 +15,18 @@ import type {
   Question, 
   QuestionStats,
   Test,
-  Banner
+  Banner,
+  ExamCategory,
+  ExamSubject,
+  ExamTopic,
+  TestAnalyticsStats,
+  StudentTestAttempt,
+  StudentProfile,
+  StudentPayment,
+  StudentCounselingSession,
+  StudentExamApplication,
+  StudentDocument,
+  StudentCommunicationLog
 } from '../types';
 
 export type { 
@@ -28,7 +39,18 @@ export type {
   Question, 
   QuestionStats,
   Test,
-  Banner
+  Banner,
+  ExamCategory,
+  ExamSubject,
+  ExamTopic,
+  TestAnalyticsStats,
+  StudentTestAttempt,
+  StudentProfile,
+  StudentPayment,
+  StudentCounselingSession,
+  StudentExamApplication,
+  StudentDocument,
+  StudentCommunicationLog
 };
 
 // ==========================================
@@ -293,6 +315,95 @@ export function useDeleteStudent() {
   });
 }
 
+export function useStudentProfile(userId: string) {
+  return useQuery<StudentProfile>({
+    queryKey: ['studentProfile', userId],
+    queryFn: async () => {
+      const response = await apiClient.get(`${ApiConstants.students.list}/${userId}/profile`);
+      return response.data.data;
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useUpdateStudentProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, data }: { userId: string; data: Partial<StudentProfile> }) => {
+      const response = await apiClient.put(`${ApiConstants.students.list}/${userId}/profile`, data);
+      return response.data.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['studentProfile', variables.userId] });
+    },
+  });
+}
+
+export function useAddStudentPayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, data }: { userId: string; data: { amountPaid: number; paymentMethod: string; installmentInfo?: string } }) => {
+      const response = await apiClient.post(`${ApiConstants.students.list}/${userId}/payments`, data);
+      return response.data.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['studentProfile', variables.userId] });
+    },
+  });
+}
+
+export function useAddStudentCounseling() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, data }: { userId: string; data: { mentorName: string; notes: string; remarks?: string; followUpDate?: string } }) => {
+      const response = await apiClient.post(`${ApiConstants.students.list}/${userId}/counseling`, data);
+      return response.data.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['studentProfile', variables.userId] });
+    },
+  });
+}
+
+export function useAddStudentExamApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, data }: { userId: string; data: { examName: string; notificationDate?: string; applied: boolean; applicationNo?: string; hallTicketNo?: string; examDate?: string; resultStatus?: string; finalSelection?: string } }) => {
+      const response = await apiClient.post(`${ApiConstants.students.list}/${userId}/exam-applications`, data);
+      return response.data.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['studentProfile', variables.userId] });
+    },
+  });
+}
+
+export function useAddStudentDocument() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, data }: { userId: string; data: { documentType: string; fileUrl: string } }) => {
+      const response = await apiClient.post(`${ApiConstants.students.list}/${userId}/documents`, data);
+      return response.data.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['studentProfile', variables.userId] });
+    },
+  });
+}
+
+export function useAddStudentCommunication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, data }: { userId: string; data: { type: string; content: string; sentBy: string } }) => {
+      const response = await apiClient.post(`${ApiConstants.students.list}/${userId}/communications`, data);
+      return response.data.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['studentProfile', variables.userId] });
+    },
+  });
+}
+
 // ==========================================
 // QUESTIONS & TESTS HOOKS
 // ==========================================
@@ -508,3 +619,77 @@ export function useDeleteBanner() {
     },
   });
 }
+
+// ==========================================
+// EXAM TAXONOMY HOOKS
+// ==========================================
+
+export function useExamCategories() {
+  return useQuery<ExamCategory[]>({
+    queryKey: ['examCategories'],
+    queryFn: async () => {
+      const response = await apiClient.get(ApiConstants.tests.categories);
+      return response.data.data;
+    },
+  });
+}
+
+export function useCreateCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name: string; description?: string; iconName?: string }) => {
+      const response = await apiClient.post(ApiConstants.tests.categories, data);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['examCategories'] });
+    },
+  });
+}
+
+export function useCreateSubject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { categoryId: string; name: string }) => {
+      const response = await apiClient.post(ApiConstants.tests.subjects, data);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['examCategories'] });
+    },
+  });
+}
+
+export function useCreateTopic() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { subjectId: string; name: string }) => {
+      const response = await apiClient.post(ApiConstants.tests.topics, data);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['examCategories'] });
+    },
+  });
+}
+
+export function useTestAnalytics() {
+  return useQuery<TestAnalyticsStats>({
+    queryKey: ['testAnalytics'],
+    queryFn: async () => {
+      const response = await apiClient.get(ApiConstants.tests.analytics);
+      return response.data.data;
+    },
+  });
+}
+
+export function useAllTestAttempts() {
+  return useQuery<StudentTestAttempt[]>({
+    queryKey: ['allTestAttempts'],
+    queryFn: async () => {
+      const response = await apiClient.get(ApiConstants.tests.attemptsAll);
+      return response.data.data;
+    },
+  });
+}
+
