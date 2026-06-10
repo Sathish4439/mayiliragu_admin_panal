@@ -18,8 +18,10 @@ import {
   useTestAnalytics,
   useAllTestAttempts
 } from '../../../core/api/endpoints';
+import { exportQuestionsToExcel } from '../../../core/api/endpoints';
 import { type Question, type Test } from '../../../core/types';
 import QuestionFormModal from '../components/QuestionFormModal';
+import BulkImportModal from '../components/BulkImportModal';
 import TestBuilderWizardModal from '../components/TestBuilderWizardModal';
 import ConfirmModal from '../../../shared/components/ConfirmModal';
 import { 
@@ -29,7 +31,9 @@ import {
   Plus, 
   Trash2, 
   BookOpen, 
-  ChevronRight, 
+  ChevronRight,
+  Upload,
+  Download, 
   X, 
   GraduationCap, 
   Landmark, 
@@ -112,8 +116,27 @@ export default function TestsPage() {
   const deleteQuestionMutation = useDeleteQuestion();
 
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | undefined>(undefined);
   const [questionIdToDelete, setQuestionIdToDelete] = useState<string | null>(null);
+
+  const handleExportQuestions = async () => {
+    try {
+      setIsExporting(true);
+      await exportQuestionsToExcel({
+        subject: selectedSubject,
+        type: selectedType,
+        difficulty: selectedDifficulty,
+        search: searchQuery
+      });
+    } catch (err) {
+      console.error('Failed to export questions:', err);
+      alert('Failed to export questions. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleCreateQuestionClick = () => {
     setEditingQuestion(undefined);
@@ -370,6 +393,23 @@ export default function TestsPage() {
                   <option value="Medium">Medium</option>
                   <option value="Hard">Hard</option>
                 </select>
+
+                <button
+                  onClick={() => setIsBulkImportOpen(true)}
+                  className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-border/50 text-text-secondary font-bold rounded-xl text-xs flex items-center space-x-1.5 transition-all"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Import</span>
+                </button>
+
+                <button
+                  onClick={handleExportQuestions}
+                  disabled={isExporting}
+                  className="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 border border-border/50 text-text-secondary font-bold rounded-xl text-xs flex items-center space-x-1.5 transition-all disabled:opacity-50"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>{isExporting ? 'Exporting...' : 'Export'}</span>
+                </button>
 
                 <button
                   onClick={handleCreateQuestionClick}
@@ -989,6 +1029,12 @@ export default function TestsPage() {
         onClose={() => setIsQuestionModalOpen(false)}
         onSubmit={handleQuestionSubmit}
         question={editingQuestion}
+      />
+
+      <BulkImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        onSuccess={handleRefreshAll}
       />
 
       <TestBuilderWizardModal

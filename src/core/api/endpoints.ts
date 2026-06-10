@@ -693,3 +693,70 @@ export function useAllTestAttempts() {
   });
 }
 
+export async function downloadImportTemplate() {
+  const response = await apiClient.get(ApiConstants.questions.template, {
+    responseType: 'blob',
+  });
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'questions_import_template.xlsx');
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+export async function exportQuestionsToExcel(filters: {
+  subject?: string;
+  type?: string;
+  difficulty?: string;
+  search?: string;
+}) {
+  const params: Record<string, string> = {};
+  if (filters.subject && filters.subject !== 'All Subjects') {
+    params.subject = filters.subject;
+  }
+  if (filters.type && filters.type !== 'All Types') {
+    params.type = filters.type;
+  }
+  if (filters.difficulty && filters.difficulty !== 'Difficulty: All') {
+    params.difficulty = filters.difficulty;
+  }
+  if (filters.search) {
+    params.search = filters.search;
+  }
+
+  const response = await apiClient.get(ApiConstants.questions.export, {
+    params,
+    responseType: 'blob',
+  });
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', `questions_export_${Date.now()}.xlsx`);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+export function useImportQuestions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await apiClient.post(ApiConstants.questions.import, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+      queryClient.invalidateQueries({ queryKey: ['questionStats'] });
+    },
+  });
+}
+
+

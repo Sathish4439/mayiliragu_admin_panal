@@ -47,7 +47,7 @@ export default function CourseDetailPage() {
   const [copiedEmail, setCopiedEmail] = useState(false);
 
   const handleCopyEmail = () => {
-    navigator.clipboard.writeText('mayiliragu@mayiliragu.iam.gserviceaccount.com');
+    navigator.clipboard.writeText('education-app@mayiliragu.iam.gserviceaccount.com');
     setCopiedEmail(true);
     setTimeout(() => setCopiedEmail(false), 2000);
   };
@@ -265,7 +265,7 @@ export default function CourseDetailPage() {
 
   return (
     <div className="p-6 sm:p-8 space-y-6 animate-fade-in relative">
-      
+
       {/* Back to courses */}
       <Link
         to="/courses"
@@ -351,7 +351,7 @@ export default function CourseDetailPage() {
                     className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/40 select-none transition-colors"
                   >
                     <div className="flex items-center space-x-3 min-w-0">
-                      
+
                       {/* Sorting controls for Module */}
                       <div className="flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
                         <button
@@ -434,7 +434,7 @@ export default function CourseDetailPage() {
                               className="bg-cardBg border border-border/50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs hover:border-slate-300 transition-all duration-200"
                             >
                               <div className="flex items-start space-x-3 min-w-0">
-                                
+
                                 {/* Lesson Sorting controls */}
                                 <div className="flex flex-col items-center justify-center pt-0.5">
                                   <button
@@ -467,7 +467,7 @@ export default function CourseDetailPage() {
                                   <p className="text-xs text-text-secondary leading-normal line-clamp-2">
                                     {lesson.description}
                                   </p>
-                                  
+
                                   {/* Lesson meta counts */}
                                   <div className="flex items-center space-x-4 pt-1 text-[10px] text-text-secondary font-semibold">
                                     <span className="flex items-center space-x-1">
@@ -532,9 +532,8 @@ export default function CourseDetailPage() {
                     placeholder="e.g. Getting Started & Setup"
                     {...registerModule('title')}
                     disabled={isModuleSubmitting}
-                    className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all ${
-                      moduleErrors.title ? 'border-error focus:ring-error focus:border-error bg-red-50/10' : 'border-border focus:ring-accent focus:border-accent'
-                    } text-text-primary bg-slate-50/20`}
+                    className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all ${moduleErrors.title ? 'border-error focus:ring-error focus:border-error bg-red-50/10' : 'border-border focus:ring-accent focus:border-accent'
+                      } text-text-primary bg-slate-50/20`}
                   />
                   {moduleErrors.title && (
                     <p className="text-[11px] text-error font-semibold pl-1">{moduleErrors.title.message}</p>
@@ -590,9 +589,8 @@ export default function CourseDetailPage() {
                     placeholder="e.g. Installing Flutter Development Tools"
                     {...registerLesson('title')}
                     disabled={isLessonSubmitting}
-                    className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all ${
-                      lessonErrors.title ? 'border-error focus:ring-error focus:border-error bg-red-50/10' : 'border-border focus:ring-accent focus:border-accent'
-                    } text-text-primary bg-slate-50/20`}
+                    className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all ${lessonErrors.title ? 'border-error focus:ring-error focus:border-error bg-red-50/10' : 'border-border focus:ring-accent focus:border-accent'
+                      } text-text-primary bg-slate-50/20`}
                   />
                   {lessonErrors.title && (
                     <p className="text-[11px] text-error font-semibold pl-1">{lessonErrors.title.message}</p>
@@ -609,9 +607,8 @@ export default function CourseDetailPage() {
                     placeholder="Provide detailed description explaining topic contents..."
                     {...registerLesson('description')}
                     disabled={isLessonSubmitting}
-                    className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all resize-none ${
-                      lessonErrors.description ? 'border-error focus:ring-error focus:border-error bg-red-50/10' : 'border-border focus:ring-accent focus:border-accent'
-                    } text-text-primary bg-slate-50/20`}
+                    className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all resize-none ${lessonErrors.description ? 'border-error focus:ring-error focus:border-error bg-red-50/10' : 'border-border focus:ring-accent focus:border-accent'
+                      } text-text-primary bg-slate-50/20`}
                   />
                   {lessonErrors.description && (
                     <p className="text-[11px] text-error font-semibold pl-1">{lessonErrors.description.message}</p>
@@ -628,14 +625,13 @@ export default function CourseDetailPage() {
                     placeholder="e.g. 1a2b3c4d5e6f7g8h9i0j"
                     {...registerLesson('driveFileId')}
                     disabled={isLessonSubmitting}
-                    className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all ${
-                      lessonErrors.driveFileId ? 'border-error focus:ring-error focus:border-error bg-red-50/10' : 'border-border focus:ring-accent focus:border-accent'
-                    } text-text-primary bg-slate-50/20`}
+                    className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all ${lessonErrors.driveFileId ? 'border-error focus:ring-error focus:border-error bg-red-50/10' : 'border-border focus:ring-accent focus:border-accent'
+                      } text-text-primary bg-slate-50/20`}
                   />
                   {lessonErrors.driveFileId && (
                     <p className="text-[11px] text-error font-semibold pl-1">{lessonErrors.driveFileId.message}</p>
                   )}
-                  
+
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-semibold text-text-secondary mt-1.5 p-2 bg-slate-50 border border-border/50 rounded-xl">
                     <span>Share view access to service account:</span>
                     <button
@@ -644,7 +640,7 @@ export default function CourseDetailPage() {
                       className="inline-flex items-center space-x-1.5 text-accent hover:text-accent-onContainer bg-white px-2 py-1 rounded-lg border border-border/80 transition-all font-mono text-[10px] select-all cursor-pointer shadow-sm hover:shadow active:scale-[0.98]"
                       title="Copy Service Account Email"
                     >
-                      <span className="truncate max-w-[200px] sm:max-w-none">mayiliragu@mayiliragu.iam.gserviceaccount.com</span>
+                      <span className="truncate max-w-[200px] sm:max-w-none">education-app@mayiliragu.iam.gserviceaccount.com</span>
                       {copiedEmail ? (
                         <Check className="w-3 h-3 text-green-650 flex-shrink-0" />
                       ) : (
@@ -664,9 +660,8 @@ export default function CourseDetailPage() {
                     placeholder="e.g. 15"
                     {...registerLesson('durationMinutes', { valueAsNumber: true })}
                     disabled={isLessonSubmitting}
-                    className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all ${
-                      lessonErrors.durationMinutes ? 'border-error focus:ring-error focus:border-error bg-red-50/10' : 'border-border focus:ring-accent focus:border-accent'
-                    } text-text-primary bg-slate-50/20`}
+                    className={`w-full px-4 py-2.5 rounded-xl border text-sm font-medium outline-none transition-all ${lessonErrors.durationMinutes ? 'border-error focus:ring-error focus:border-error bg-red-50/10' : 'border-border focus:ring-accent focus:border-accent'
+                      } text-text-primary bg-slate-50/20`}
                   />
                   {lessonErrors.durationMinutes && (
                     <p className="text-[11px] text-error font-semibold pl-1">{lessonErrors.durationMinutes.message}</p>

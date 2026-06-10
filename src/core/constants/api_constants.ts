@@ -34,6 +34,9 @@ export const ApiConstants = {
     base: '/questions',
     detail: (questionId: string) => `/questions/${questionId}`,
     stats: '/questions/stats',
+    import: '/questions/import',
+    export: '/questions/export',
+    template: '/questions/import/template',
   },
   tests: {
     base: '/tests',

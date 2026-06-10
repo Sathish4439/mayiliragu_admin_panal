@@ -85,7 +85,7 @@ export default function MainLayoutShell() {
             </div>
             {isSidebarOpen && (
               <span className="text-base font-extrabold tracking-wider bg-gradient-to-r from-white via-secondary to-accent bg-clip-text text-transparent transition-opacity duration-300">
-                MAYILIRAGU
+                EDUCATION_APP
               </span>
             )}
           </Link>
@@ -154,7 +154,7 @@ export default function MainLayoutShell() {
               <span className="text-primary font-black text-lg">M</span>
             </div>
             <span className="text-base font-extrabold tracking-wider bg-gradient-to-r from-white to-secondary bg-clip-text text-transparent">
-              MAYILIRAGU
+              EDUCATION_APP
             </span>
           </Link>
           <button onClick={() => setIsSidebarOpen(false)} className="text-gray-400 hover:text-white">
