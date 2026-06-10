@@ -14,9 +14,9 @@ import {
   useAddStudentExamApplication,
   useAddStudentDocument,
   useAddStudentCommunication,
-  type Student
-} from '../api/enrollments';
-import { useCoursesList } from '../../courses/api/courses';
+  useCoursesList
+} from '../../../core/api/endpoints';
+import type { Student } from '../../../core/types';
 import { 
   Search, 
   User, 
@@ -27,7 +27,6 @@ import {
   Mail, 
   Calendar, 
   BookMarked,
-  X,
   GraduationCap,
   AlertCircle,
   Pencil,
@@ -48,6 +47,12 @@ import {
 import { getAvailableCourses } from '../../../core/utils';
 import StudentFormModal from '../components/StudentFormModal';
 import ConfirmModal from '../../../shared/components/ConfirmModal';
+import EnrollModal from '../components/EnrollModal';
+import PaymentModal from '../components/PaymentModal';
+import CounselingModal from '../components/CounselingModal';
+import ExamAppModal from '../components/ExamAppModal';
+import DocModal from '../components/DocModal';
+import CommModal from '../components/CommModal';
 
 type TabType = 'overview' | 'address_education' | 'exam_prep' | 'fees_payments' | 'performance' | 'mentoring' | 'exam_apps' | 'docs_history';
 
@@ -163,7 +168,7 @@ export default function StudentManagementPage() {
   // Filter students based on search query
   const filteredStudents = useMemo(() => {
     return students.filter(
-      (student) =>
+      (student: Student) =>
         student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         student.email.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -171,7 +176,7 @@ export default function StudentManagementPage() {
 
   // Enrolled course IDs for filtering
   const enrolledCourseIds = useMemo(() => {
-    return new Set(enrollments.map((e) => e.courseId));
+    return new Set<string>(enrollments.map((e: any) => e.courseId));
   }, [enrollments]);
 
   // Filter courses available for enrollment
@@ -179,7 +184,7 @@ export default function StudentManagementPage() {
     const allCourses = coursesData?.data ?? [];
     const filtered = getAvailableCourses(allCourses, enrolledCourseIds);
     if (!courseSearchQuery) return filtered;
-    return filtered.filter((c) =>
+    return filtered.filter((c: any) =>
       c.title.toLowerCase().includes(courseSearchQuery.toLowerCase())
     );
   }, [coursesData, enrolledCourseIds, courseSearchQuery]);
@@ -409,7 +414,7 @@ export default function StudentManagementPage() {
   // Calculate totals for payment tab
   const totalPaid = useMemo(() => {
     if (!profile?.payments) return 0;
-    return profile.payments.reduce((acc, curr) => acc + curr.amountPaid, 0);
+    return profile.payments.reduce((acc: number, curr: any) => acc + curr.amountPaid, 0);
   }, [profile?.payments]);
 
   const balanceFee = useMemo(() => {
@@ -466,7 +471,7 @@ export default function StudentManagementPage() {
               <p className="text-xs font-semibold">No students found.</p>
             </div>
           ) : (
-            filteredStudents.map((student) => {
+            filteredStudents.map((student: Student) => {
               const isSelected = selectedStudent?.id === student.id;
               return (
                 <div
@@ -1133,7 +1138,7 @@ export default function StudentManagementPage() {
                           </p>
                         ) : (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {enrollments.map((enrollment) => (
+                            {enrollments.map((enrollment: any) => (
                               <div
                                 key={enrollment.id}
                                 className="bg-cardBg border border-border/60 rounded-2xl p-4 flex items-center justify-between shadow-xs hover:border-slate-350 transition-colors"
@@ -1274,7 +1279,7 @@ export default function StudentManagementPage() {
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-border/30 text-xs text-text-primary font-medium">
-                                {profile.payments.map((pmt) => (
+                                {profile.payments.map((pmt: any) => (
                                   <tr key={pmt.id} className="hover:bg-slate-50/50 transition-colors">
                                     <td className="p-4 font-extrabold text-accent">{pmt.receiptNumber}</td>
                                     <td className="p-4">{new Date(pmt.paymentDate).toLocaleDateString()}</td>
@@ -1439,7 +1444,7 @@ export default function StudentManagementPage() {
                           </p>
                         ) : (
                           <div className="space-y-4">
-                            {profile.counselingSessions.map((session) => (
+                            {profile.counselingSessions.map((session: any) => (
                               <div key={session.id} className="bg-slate-50/60 border border-border/50 rounded-2xl p-4.5 space-y-2.5">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center space-x-2 text-xs">
@@ -1506,7 +1511,7 @@ export default function StudentManagementPage() {
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-border/30 text-xs text-text-primary font-medium">
-                                {profile.examApplications.map((app) => (
+                                {profile.examApplications.map((app: any) => (
                                   <tr key={app.id} className="hover:bg-slate-50/50 transition-colors">
                                     <td className="p-4 font-bold text-text-primary">{app.examName}</td>
                                     <td className="p-4">{app.notificationDate ? new Date(app.notificationDate).toLocaleDateString() : '-'}</td>
@@ -1561,7 +1566,7 @@ export default function StudentManagementPage() {
                           </p>
                         ) : (
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                            {profile.documents.map((doc) => (
+                            {profile.documents.map((doc: any) => (
                               <div key={doc.id} className="border border-border/50 bg-slate-50/50 rounded-2xl p-4 flex items-center justify-between">
                                 <div className="min-w-0">
                                   <p className="font-extrabold text-xs text-text-primary truncate">{doc.documentType}</p>
@@ -1604,7 +1609,7 @@ export default function StudentManagementPage() {
                           </p>
                         ) : (
                           <div className="space-y-3">
-                            {profile.communications.map((log) => (
+                            {profile.communications.map((log: any) => (
                               <div key={log.id} className="bg-slate-50/40 border border-border/40 rounded-xl p-3 flex items-start space-x-3 text-xs">
                                 <span className="bg-slate-150 text-slate-800 text-[10px] px-2 py-0.5 rounded-md font-bold uppercase mt-0.5">
                                   {log.type}
@@ -1758,145 +1763,83 @@ export default function StudentManagementPage() {
         )}
       </div>
 
+      {/* Enroll Course modal Dialog */}
+      <EnrollModal
+        isOpen={isEnrollDialogOpen}
+        onClose={() => { setIsEnrollDialogOpen(false); setCourseSearchQuery(''); }}
+        selectedStudent={selectedStudent}
+        courseSearchQuery={courseSearchQuery}
+        setCourseSearchQuery={setCourseSearchQuery}
+        availableCourses={availableCourses}
+        onEnroll={handleEnroll}
+        isEnrollingId={isEnrollingId}
+      />
+
       {/* ==================== SUB-RESOURCE MODAL 1: RECORD PAYMENT ==================== */}
-      {isPaymentModalOpen && selectedStudent && (
+      {isPaymentModalOpen && (
         <PaymentModal
           onClose={() => setIsPaymentModalOpen(false)}
           onSubmit={async (data) => {
-            await addPaymentMutation.mutateAsync({ userId: selectedStudent.id, data });
-            refetchProfile();
+            if (selectedStudent) {
+              await addPaymentMutation.mutateAsync({ userId: selectedStudent.id, data });
+              refetchProfile();
+            }
           }}
         />
       )}
 
       {/* ==================== SUB-RESOURCE MODAL 2: LOG SESSION ==================== */}
-      {isCounselingModalOpen && selectedStudent && (
+      {isCounselingModalOpen && (
         <CounselingModal
           onClose={() => setIsCounselingModalOpen(false)}
           onSubmit={async (data) => {
-            await addCounselingMutation.mutateAsync({ userId: selectedStudent.id, data });
-            refetchProfile();
+            if (selectedStudent) {
+              await addCounselingMutation.mutateAsync({ userId: selectedStudent.id, data });
+              refetchProfile();
+            }
           }}
         />
       )}
 
       {/* ==================== SUB-RESOURCE MODAL 3: TRACK EXAM APP ==================== */}
-      {isExamAppModalOpen && selectedStudent && (
+      {isExamAppModalOpen && (
         <ExamAppModal
           onClose={() => setIsExamAppModalOpen(false)}
           onSubmit={async (data) => {
-            await addExamAppMutation.mutateAsync({ userId: selectedStudent.id, data });
-            refetchProfile();
+            if (selectedStudent) {
+              await addExamAppMutation.mutateAsync({ userId: selectedStudent.id, data });
+              refetchProfile();
+            }
           }}
         />
       )}
 
       {/* ==================== SUB-RESOURCE MODAL 4: ADD DOCUMENT ==================== */}
-      {isDocModalOpen && selectedStudent && (
+      {isDocModalOpen && (
         <DocModal
           onClose={() => setIsDocModalOpen(false)}
           onSubmit={async (data) => {
-            await addDocumentMutation.mutateAsync({ userId: selectedStudent.id, data });
-            refetchProfile();
+            if (selectedStudent) {
+              await addDocumentMutation.mutateAsync({ userId: selectedStudent.id, data });
+              refetchProfile();
+            }
           }}
         />
       )}
 
       {/* ==================== SUB-RESOURCE MODAL 5: LOG COMMUNICATION ==================== */}
-      {isCommModalOpen && selectedStudent && (
+      {isCommModalOpen && (
         <CommModal
           onClose={() => setIsCommModalOpen(false)}
           onSubmit={async (data) => {
-            await addCommMutation.mutateAsync({ userId: selectedStudent.id, data });
-            refetchProfile();
+            if (selectedStudent) {
+              await addCommMutation.mutateAsync({ userId: selectedStudent.id, data });
+              refetchProfile();
+            }
           }}
         />
       )}
 
-      {/* Enroll Course modal Dialog */}
-      {isEnrollDialogOpen && selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md bg-cardBg border border-border/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-            
-            {/* Modal Header */}
-            <div className="p-6 border-b border-border/45 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-extrabold text-text-primary tracking-tight">
-                  Enroll Student
-                </h3>
-                <p className="text-xs text-text-secondary font-medium mt-0.5">
-                  Select a course to enroll <strong className="text-text-primary">{selectedStudent.name}</strong>.
-                </p>
-              </div>
-              <button 
-                onClick={() => { setIsEnrollDialogOpen(false); setCourseSearchQuery(''); }}
-                className="p-1 rounded-lg hover:bg-slate-100 text-gray-400 hover:text-text-primary transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Course search bar */}
-            <div className="p-4 bg-slate-50/60 border-b border-border/40">
-              <div className="flex items-center bg-cardBg border border-border/50 rounded-xl px-3 py-2">
-                <Search className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Filter available courses..."
-                  value={courseSearchQuery}
-                  onChange={(e) => setCourseSearchQuery(e.target.value)}
-                  className="w-full bg-transparent text-xs text-text-primary placeholder-gray-400 outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Courses listing */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {availableCourses.length === 0 ? (
-                <p className="text-center text-xs text-text-secondary py-8 font-semibold">
-                  No further courses available for enrollment.
-                </p>
-              ) : (
-                availableCourses.map((course) => (
-                  <div
-                    key={course.id}
-                    onClick={() => handleEnroll(course.id)}
-                    className="p-3 bg-cardBg border border-border/50 hover:border-accent/40 rounded-2xl flex items-center justify-between cursor-pointer transition-all duration-200 group"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0">
-                      <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 relative border border-border/40">
-                        <img
-                          src={course.thumbnail}
-                          alt={course.title}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500';
-                          }}
-                        />
-                      </div>
-                      <span className="font-extrabold text-xs text-text-primary truncate group-hover:text-accent transition-colors">
-                        {course.title}
-                      </span>
-                    </div>
-
-                    <button
-                      disabled={isEnrollingId === course.id}
-                      className="p-1 text-accent group-hover:scale-105 transition-transform disabled:opacity-50"
-                    >
-                      {isEnrollingId === course.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Plus className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      
       <StudentFormModal
         isOpen={isFormOpen}
         onClose={() => {
@@ -1919,486 +1862,3 @@ export default function StudentManagementPage() {
   );
 }
 
-// ==========================================
-// SUB-RESOURCE MODAL COMPONENTS
-// ==========================================
-
-interface BaseModalProps {
-  onClose: () => void;
-}
-
-function PaymentModal({ onClose, onSubmit }: BaseModalProps & { onSubmit: (data: any) => Promise<void> }) {
-  const [amountPaid, setAmountPaid] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('UPI');
-  const [installmentInfo, setInstallmentInfo] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!amountPaid || isNaN(Number(amountPaid))) return;
-    setIsSubmitting(true);
-    try {
-      await onSubmit({
-        amountPaid: Number(amountPaid),
-        paymentMethod,
-        installmentInfo: installmentInfo.trim() || undefined
-      });
-      onClose();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md bg-cardBg border border-border/80 rounded-3xl shadow-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="text-base font-extrabold text-text-primary">Record Student Payment</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-text-primary"><X className="w-5 h-5" /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-text-secondary uppercase">Amount Paid (₹)</label>
-            <input
-              type="number"
-              required
-              value={amountPaid}
-              onChange={(e) => setAmountPaid(e.target.value)}
-              placeholder="e.g. 5000"
-              className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-text-secondary uppercase">Payment Method</label>
-            <select
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent"
-            >
-              <option value="UPI">UPI</option>
-              <option value="Cash">Cash</option>
-              <option value="Card">Card</option>
-              <option value="NetBanking">NetBanking</option>
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-text-secondary uppercase">Installment Info / Notes</label>
-            <input
-              type="text"
-              value={installmentInfo}
-              onChange={(e) => setInstallmentInfo(e.target.value)}
-              placeholder="e.g. 1st Installment"
-              className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent"
-            />
-          </div>
-          <div className="pt-3 flex items-center justify-end space-x-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-accent text-white rounded-xl text-xs font-bold flex items-center space-x-1">
-              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Save Record</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function CounselingModal({ onClose, onSubmit }: BaseModalProps & { onSubmit: (data: any) => Promise<void> }) {
-  const [mentorName, setMentorName] = useState('');
-  const [notes, setNotes] = useState('');
-  const [remarks, setRemarks] = useState('');
-  const [followUpDate, setFollowUpDate] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!mentorName.trim() || !notes.trim()) return;
-    setIsSubmitting(true);
-    try {
-      await onSubmit({
-        mentorName: mentorName.trim(),
-        notes: notes.trim(),
-        remarks: remarks.trim() || undefined,
-        followUpDate: followUpDate || undefined
-      });
-      onClose();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md bg-cardBg border border-border/80 rounded-3xl shadow-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="text-base font-extrabold text-text-primary">Log Counseling Session</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-text-primary"><X className="w-5 h-5" /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-text-secondary uppercase">Mentor Name</label>
-              <input
-                type="text"
-                required
-                value={mentorName}
-                onChange={(e) => setMentorName(e.target.value)}
-                placeholder="Staff name"
-                className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-text-secondary uppercase">Follow-up Date</label>
-              <input
-                type="date"
-                value={followUpDate}
-                onChange={(e) => setFollowUpDate(e.target.value)}
-                className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent"
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-text-secondary uppercase">Session Notes</label>
-            <textarea
-              required
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Record details of career / academic counseling..."
-              className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent h-24 resize-none"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-text-secondary uppercase">Actionable Remarks</label>
-            <input
-              type="text"
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-              placeholder="e.g. Focus on Polity daily test"
-              className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent"
-            />
-          </div>
-          <div className="pt-3 flex items-center justify-end space-x-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-accent text-white rounded-xl text-xs font-bold flex items-center space-x-1">
-              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Save Record</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function ExamAppModal({ onClose, onSubmit }: BaseModalProps & { onSubmit: (data: any) => Promise<void> }) {
-  const [examName, setExamName] = useState('UPSC');
-  const [notificationDate, setNotificationDate] = useState('');
-  const [applied, setApplied] = useState(false);
-  const [applicationNo, setApplicationNo] = useState('');
-  const [hallTicketNo, setHallTicketNo] = useState('');
-  const [examDate, setExamDate] = useState('');
-  const [resultStatus, setResultStatus] = useState('Awaiting');
-  const [finalSelection, setFinalSelection] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      await onSubmit({
-        examName,
-        notificationDate: notificationDate || undefined,
-        applied,
-        applicationNo: applicationNo.trim() || undefined,
-        hallTicketNo: hallTicketNo.trim() || undefined,
-        examDate: examDate || undefined,
-        resultStatus,
-        finalSelection: finalSelection.trim() || undefined
-      });
-      onClose();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-lg bg-cardBg border border-border/80 rounded-3xl shadow-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="text-base font-extrabold text-text-primary">Track Exam Application</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-text-primary"><X className="w-5 h-5" /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-text-secondary uppercase">Exam Name</label>
-              <select
-                value={examName}
-                onChange={(e) => setExamName(e.target.value)}
-                className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent"
-              >
-                <option value="UPSC">UPSC</option>
-                <option value="TNPSC Group 1">TNPSC Group 1</option>
-                <option value="TNPSC Group 2">TNPSC Group 2</option>
-                <option value="TNPSC Group 4">TNPSC Group 4</option>
-                <option value="SSC CGL">SSC CGL</option>
-                <option value="SSC CHSL">SSC CHSL</option>
-                <option value="Banking">Banking</option>
-                <option value="Railways">Railways</option>
-                <option value="Others">Others</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-text-secondary uppercase">Notification Date</label>
-              <input
-                type="date"
-                value={notificationDate}
-                onChange={(e) => setNotificationDate(e.target.value)}
-                className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent"
-              />
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3 py-1">
-            <input
-              type="checkbox"
-              id="appliedCheck"
-              checked={applied}
-              onChange={(e) => setApplied(e.target.checked)}
-              className="w-4 h-4 accent-accent"
-            />
-            <label htmlFor="appliedCheck" className="text-xs font-bold text-text-primary uppercase cursor-pointer">
-              Has student applied for this notification?
-            </label>
-          </div>
-
-          {applied && (
-            <div className="grid grid-cols-2 gap-4 animate-fade-in">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-text-secondary uppercase">Application No</label>
-                <input
-                  type="text"
-                  value={applicationNo}
-                  onChange={(e) => setApplicationNo(e.target.value)}
-                  placeholder="App No"
-                  className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-text-secondary uppercase">Hall Ticket No</label>
-                <input
-                  type="text"
-                  value={hallTicketNo}
-                  onChange={(e) => setHallTicketNo(e.target.value)}
-                  placeholder="Ticket No"
-                  className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none"
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-text-secondary uppercase">Exam Date</label>
-              <input
-                type="date"
-                value={examDate}
-                onChange={(e) => setExamDate(e.target.value)}
-                className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-text-secondary uppercase">Result Status</label>
-              <select
-                value={resultStatus}
-                onChange={(e) => setResultStatus(e.target.value)}
-                className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none"
-              >
-                <option value="Awaiting">Awaiting</option>
-                <option value="Cleared">Cleared</option>
-                <option value="Failed">Failed</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-text-secondary uppercase">Final Selection Status</label>
-              <input
-                type="text"
-                value={finalSelection}
-                onChange={(e) => setFinalSelection(e.target.value)}
-                placeholder="e.g. Selected VAO"
-                className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="pt-3 flex items-center justify-end space-x-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-accent text-white rounded-xl text-xs font-bold flex items-center space-x-1">
-              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Save Record</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function DocModal({ onClose, onSubmit }: BaseModalProps & { onSubmit: (data: any) => Promise<void> }) {
-  const [documentType, setDocumentType] = useState('Aadhaar Copy');
-  const [fileUrl, setFileUrl] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fileUrl.trim()) return;
-    setIsSubmitting(true);
-    try {
-      await onSubmit({
-        documentType,
-        fileUrl: fileUrl.trim()
-      });
-      onClose();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md bg-cardBg border border-border/80 rounded-3xl shadow-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="text-base font-extrabold text-text-primary">Add Document Reference</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-text-primary"><X className="w-5 h-5" /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-text-secondary uppercase">Document Type</label>
-            <select
-              value={documentType}
-              onChange={(e) => setDocumentType(e.target.value)}
-              className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent"
-            >
-              <option value="Student Photo">Student Photo</option>
-              <option value="Aadhaar Copy">Aadhaar Copy</option>
-              <option value="Degree Certificate">Degree Certificate</option>
-              <option value="Community Certificate">Community Certificate</option>
-              <option value="Transfer Certificate">Transfer Certificate</option>
-              <option value="Passport Photo">Passport Photo</option>
-              <option value="Signature Image">Signature Image</option>
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-text-secondary uppercase">Document URL / Reference</label>
-            <input
-              type="text"
-              required
-              value={fileUrl}
-              onChange={(e) => setFileUrl(e.target.value)}
-              placeholder="e.g. https://storage.google.com/..."
-              className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent"
-            />
-          </div>
-          <div className="pt-3 flex items-center justify-end space-x-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-accent text-white rounded-xl text-xs font-bold flex items-center space-x-1">
-              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Save Document</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function CommModal({ onClose, onSubmit }: BaseModalProps & { onSubmit: (data: any) => Promise<void> }) {
-  const [type, setType] = useState('SMS');
-  const [content, setContent] = useState('');
-  const [sentBy, setSentBy] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!content.trim() || !sentBy.trim()) return;
-    setIsSubmitting(true);
-    try {
-      await onSubmit({
-        type,
-        content: content.trim(),
-        sentBy: sentBy.trim()
-      });
-      onClose();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md bg-cardBg border border-border/80 rounded-3xl shadow-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="text-base font-extrabold text-text-primary">Log Communication Interaction</h3>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-text-primary"><X className="w-5 h-5" /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-text-secondary uppercase">Type</label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent"
-              >
-                <option value="SMS">SMS</option>
-                <option value="WhatsApp">WhatsApp</option>
-                <option value="Email">Email</option>
-                <option value="Parent Call">Parent Call</option>
-                <option value="Follow-up Notes">Follow-up Notes</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-text-secondary uppercase">Logged By (Staff)</label>
-              <input
-                type="text"
-                required
-                value={sentBy}
-                onChange={(e) => setSentBy(e.target.value)}
-                placeholder="Your Name"
-                className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent"
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-text-secondary uppercase">Content / Notes</label>
-            <textarea
-              required
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="e.g. Sent notification for upcoming Group 4 test. / Called mother to update on attendance status."
-              className="w-full bg-slate-50 border border-border/60 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent h-24 resize-none"
-            />
-          </div>
-          <div className="pt-3 flex items-center justify-end space-x-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-100 rounded-xl text-xs font-bold">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-accent text-white rounded-xl text-xs font-bold flex items-center space-x-1">
-              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Save Record</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}

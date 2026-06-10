@@ -11,7 +11,8 @@ import {
   X, 
   User as UserIcon,
   ChevronRight,
-  Image
+  Image,
+  Newspaper
 } from 'lucide-react';
 
 interface NavItem {
@@ -33,6 +34,7 @@ export default function MainLayoutShell() {
     { name: 'Students', path: '/student-management', icon: Users },
     { name: 'Tests & Question Bank', path: '/tests', icon: GraduationCap },
     { name: 'Banners', path: '/banners', icon: Image },
+    { name: 'Current Affairs', path: '/current-affairs', icon: Newspaper },
   ];
 
   const handleLogout = () => {

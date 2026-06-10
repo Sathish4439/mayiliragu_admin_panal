@@ -1,4 +1,4 @@
-import { useAdminStats } from '../api/dashboard';
+import { useAdminStats } from '../../../core/api/endpoints';
 import { 
   Users, 
   BookOpen, 

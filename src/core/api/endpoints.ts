@@ -26,7 +26,12 @@ import type {
   StudentCounselingSession,
   StudentExamApplication,
   StudentDocument,
-  StudentCommunicationLog
+  StudentCommunicationLog,
+  CurrentAffair,
+  CurrentAffairQuiz,
+  MonthlyMagazine,
+  GovernmentScheme,
+  ImportantDate
 } from '../types';
 
 export type { 
@@ -50,7 +55,12 @@ export type {
   StudentCounselingSession,
   StudentExamApplication,
   StudentDocument,
-  StudentCommunicationLog
+  StudentCommunicationLog,
+  CurrentAffair,
+  CurrentAffairQuiz,
+  MonthlyMagazine,
+  GovernmentScheme,
+  ImportantDate
 };
 
 // ==========================================
@@ -758,5 +768,175 @@ export function useImportQuestions() {
     },
   });
 }
+
+// ==========================================
+// CURRENT AFFAIRS HOOKS
+// ==========================================
+
+export function useCurrentAffairsAdminList() {
+  return useQuery<{ data: CurrentAffair[] }>({
+    queryKey: ['currentAffairsAdmin'],
+    queryFn: async () => {
+      const response = await apiClient.get(ApiConstants.currentAffairs.admin);
+      return response.data;
+    },
+  });
+}
+
+export function useCreateCurrentAffair() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: Omit<CurrentAffair, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const response = await apiClient.post(ApiConstants.currentAffairs.base, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentAffairsAdmin'] });
+    },
+  });
+}
+
+export function useUpdateCurrentAffair() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CurrentAffair> }) => {
+      const response = await apiClient.put(ApiConstants.currentAffairs.detail(id), data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentAffairsAdmin'] });
+    },
+  });
+}
+
+export function useDeleteCurrentAffair() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.delete(ApiConstants.currentAffairs.detail(id));
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentAffairsAdmin'] });
+    },
+  });
+}
+
+export function useCurrentAffairQuizzes(articleId: string) {
+  return useQuery<{ data: CurrentAffairQuiz[] }>({
+    queryKey: ['currentAffairQuizzes', articleId],
+    queryFn: async () => {
+      const response = await apiClient.get(ApiConstants.currentAffairs.quizzes(articleId));
+      return response.data;
+    },
+    enabled: !!articleId,
+  });
+}
+
+export function useCreateCurrentAffairQuizzes() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ articleId, questions }: { articleId: string; questions: Omit<CurrentAffairQuiz, 'id' | 'currentAffairId'>[] }) => {
+      const response = await apiClient.post(ApiConstants.currentAffairs.quizzes(articleId), { questions });
+      return response.data;
+    },
+    onSuccess: (_, { articleId }) => {
+      queryClient.invalidateQueries({ queryKey: ['currentAffairQuizzes', articleId] });
+      queryClient.invalidateQueries({ queryKey: ['currentAffairsAdmin'] });
+    },
+  });
+}
+
+export function useMagazinesList() {
+  return useQuery<{ data: MonthlyMagazine[] }>({
+    queryKey: ['monthlyMagazines'],
+    queryFn: async () => {
+      const response = await apiClient.get(ApiConstants.currentAffairs.magazinesAll);
+      return response.data;
+    },
+  });
+}
+
+export function useUploadMagazine() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ title, month, year, file }: { title: string; month: number; year: number; file: File }) => {
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('month', String(month));
+      formData.append('year', String(year));
+      formData.append('file', file);
+      const response = await apiClient.post(ApiConstants.currentAffairs.magazinesUpload, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['monthlyMagazines'] });
+    },
+  });
+}
+
+export function useSchemesList() {
+  return useQuery<{ data: GovernmentScheme[] }>({
+    queryKey: ['governmentSchemes'],
+    queryFn: async () => {
+      const response = await apiClient.get(ApiConstants.currentAffairs.schemesAll);
+      return response.data;
+    },
+  });
+}
+
+export function useCreateScheme() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: Omit<GovernmentScheme, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const response = await apiClient.post(ApiConstants.currentAffairs.schemes, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['governmentSchemes'] });
+    },
+  });
+}
+
+export function useUpdateScheme() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<GovernmentScheme> }) => {
+      const response = await apiClient.put(`${ApiConstants.currentAffairs.schemes}/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['governmentSchemes'] });
+    },
+  });
+}
+
+export function useDatesList() {
+  return useQuery<{ data: ImportantDate[] }>({
+    queryKey: ['importantDates'],
+    queryFn: async () => {
+      const response = await apiClient.get(ApiConstants.currentAffairs.datesAll);
+      return response.data;
+    },
+  });
+}
+
+export function useCreateDate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: Omit<ImportantDate, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const response = await apiClient.post(ApiConstants.currentAffairs.dates, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['importantDates'] });
+    },
+  });
+}
+
 
 

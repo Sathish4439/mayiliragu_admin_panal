@@ -24,6 +24,8 @@ import QuestionFormModal from '../components/QuestionFormModal';
 import BulkImportModal from '../components/BulkImportModal';
 import TestBuilderWizardModal from '../components/TestBuilderWizardModal';
 import ConfirmModal from '../../../shared/components/ConfirmModal';
+import ConnectionModal from '../components/ConnectionModal';
+import CategoryModal from '../components/CategoryModal';
 import { 
   FileText, 
   Search, 
@@ -34,7 +36,6 @@ import {
   ChevronRight,
   Upload,
   Download, 
-  X, 
   GraduationCap, 
   Landmark, 
   Award,
@@ -847,182 +848,33 @@ export default function TestsPage() {
       {/* ========================================== */}
 
       {/* New Connection Modal */}
-      {isConnectionModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <form 
-            onSubmit={handleCreateConnection}
-            className="w-full max-w-md bg-cardBg border border-border/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
-          >
-            <div className="p-6 border-b border-border/45 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-extrabold text-text-primary tracking-tight">Create Course Connection</h3>
-                <p className="text-xs text-text-secondary font-medium mt-0.5">Link a mock test profile to a course module.</p>
-              </div>
-              <button 
-                type="button"
-                onClick={() => setIsConnectionModalOpen(false)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-gray-400 hover:text-text-primary transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 overflow-y-auto">
-              {/* Select Course */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-extrabold text-text-primary uppercase tracking-wider">Select Course</label>
-                <select
-                  value={newConnCourseId}
-                  onChange={(e) => {
-                    setNewConnCourseId(e.target.value);
-                    setNewConnModuleId('');
-                  }}
-                  required
-                  className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-bold text-text-secondary bg-slate-50/20"
-                >
-                  <option value="">-- Choose Course --</option>
-                  {coursesData?.data.map((c) => (
-                    <option key={c.id} value={c.id}>{c.title}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Select Module (Optional) */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-extrabold text-text-primary uppercase tracking-wider">Select Module (Optional)</label>
-                <select
-                  value={newConnModuleId}
-                  onChange={(e) => setNewConnModuleId(e.target.value)}
-                  disabled={!newConnCourseId}
-                  className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-bold text-text-secondary bg-slate-50/20 disabled:opacity-50"
-                >
-                  <option value="">Entire Course Syllabus</option>
-                  {selectedCourseDetail?.modules?.map((m) => (
-                    <option key={m.id} value={m.id}>{m.title}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Select Test to Link */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-extrabold text-text-primary uppercase tracking-wider">Select Test to Connect</label>
-                <select
-                  value={newConnTestId}
-                  onChange={(e) => setNewConnTestId(e.target.value)}
-                  required
-                  className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-bold text-text-secondary bg-slate-50/20"
-                >
-                  <option value="">-- Choose Test --</option>
-                  {tests.filter((t) => !t.course_id).map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.title} ({t.question_count || 0} Questions)
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="p-4 bg-slate-50 border-t border-border/40 flex items-center justify-end space-x-3">
-              <button
-                type="button"
-                onClick={() => setIsConnectionModalOpen(false)}
-                className="px-4 py-2.5 bg-white border border-border hover:bg-slate-50 text-xs font-bold rounded-xl text-text-secondary transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2.5 bg-accent hover:bg-accent-onContainer text-xs font-bold rounded-xl text-white shadow-md shadow-accent/15 transition-all"
-              >
-                Create Linking
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <ConnectionModal
+        isOpen={isConnectionModalOpen}
+        onClose={() => setIsConnectionModalOpen(false)}
+        onSubmit={handleCreateConnection}
+        courses={coursesData?.data || []}
+        selectedCourseDetail={selectedCourseDetail}
+        newConnCourseId={newConnCourseId}
+        setNewConnCourseId={setNewConnCourseId}
+        newConnModuleId={newConnModuleId}
+        setNewConnModuleId={setNewConnModuleId}
+        newConnTestId={newConnTestId}
+        setNewConnTestId={setNewConnTestId}
+        tests={tests}
+      />
 
       {/* Add Category Modal */}
-      {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <form 
-            onSubmit={handleCreateCategory}
-            className="w-full max-w-md bg-cardBg border border-border/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
-          >
-            <div className="p-6 border-b border-border/45 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-extrabold text-text-primary tracking-tight">Add Exam Category</h3>
-                <p className="text-xs text-text-secondary font-medium mt-0.5">Configure a new category folder for syllabus taxonomy.</p>
-              </div>
-              <button 
-                type="button"
-                onClick={() => setIsCategoryModalOpen(false)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-gray-400 hover:text-text-primary transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 overflow-y-auto">
-              {/* Category Name */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-extrabold text-text-primary uppercase tracking-wider">Category Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. UPSC Exams"
-                  value={newCatName}
-                  onChange={(e) => setNewCatName(e.target.value)}
-                  required
-                  className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-bold text-text-primary bg-slate-50/20"
-                />
-              </div>
-
-              {/* Description */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-extrabold text-text-primary uppercase tracking-wider">Description</label>
-                <textarea
-                  placeholder="Describe the category, exam focus areas, etc."
-                  value={newCatDescription}
-                  onChange={(e) => setNewCatDescription(e.target.value)}
-                  required
-                  rows={3}
-                  className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-semibold text-text-primary bg-slate-50/20"
-                />
-              </div>
-
-              {/* Choose Icon */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-extrabold text-text-primary uppercase tracking-wider">Select Icon Graphic</label>
-                <select
-                  value={newCatIcon}
-                  onChange={(e) => setNewCatIcon(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-border focus:ring-2 focus:ring-accent outline-none text-xs font-bold text-text-secondary bg-slate-50/20"
-                >
-                  <option value="GraduationCap">Graduation Cap</option>
-                  <option value="Landmark">Landmark (Banking)</option>
-                  <option value="FileText">File Text (Standard)</option>
-                  <option value="Award">Award (Certifications)</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="p-4 bg-slate-50 border-t border-border/40 flex items-center justify-end space-x-3">
-              <button
-                type="button"
-                onClick={() => setIsCategoryModalOpen(false)}
-                className="px-4 py-2.5 bg-white border border-border hover:bg-slate-50 text-xs font-bold rounded-xl text-text-secondary transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2.5 bg-accent hover:bg-accent-onContainer text-xs font-bold rounded-xl text-white shadow-md shadow-accent/15 transition-all"
-              >
-                Add Category
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <CategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onSubmit={handleCreateCategory}
+        newCatName={newCatName}
+        setNewCatName={setNewCatName}
+        newCatDescription={newCatDescription}
+        setNewCatDescription={setNewCatDescription}
+        newCatIcon={newCatIcon}
+        setNewCatIcon={setNewCatIcon}
+      />
 
       <QuestionFormModal
         isOpen={isQuestionModalOpen}

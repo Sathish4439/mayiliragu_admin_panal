@@ -53,4 +53,16 @@ export const ApiConstants = {
     detail: (id: string) => `/banners/${id}`,
     toggle: (id: string) => `/banners/${id}/toggle`,
   },
+  currentAffairs: {
+    base: '/current-affairs',
+    admin: '/current-affairs/admin',
+    detail: (id: string) => `/current-affairs/${id}`,
+    quizzes: (articleId: string) => `/current-affairs/${articleId}/quizzes`,
+    magazinesAll: '/current-affairs/magazines/all',
+    magazinesUpload: '/current-affairs/magazines/upload',
+    schemesAll: '/current-affairs/schemes/all',
+    schemes: '/current-affairs/schemes',
+    datesAll: '/current-affairs/important-dates/all',
+    dates: '/current-affairs/important-dates',
+  },
 } as const;

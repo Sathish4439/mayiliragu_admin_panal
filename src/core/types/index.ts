@@ -304,3 +304,73 @@ export interface StudentTestAttempt {
   createdAt: string;
 }
 
+export interface CurrentAffairQuiz {
+  id: string;
+  currentAffairId: string;
+  questionEn: string;
+  questionTa?: string;
+  optionsEn: string[];
+  optionsTa?: string[];
+  correctAnswer: string;
+  explanationEn?: string;
+  explanationTa?: string;
+}
+
+export interface CurrentAffair {
+  id: string;
+  titleEn: string;
+  titleTa?: string;
+  summaryEn: string;
+  summaryTa?: string;
+  contentEn: string;
+  contentTa?: string;
+  examImportanceEn?: string;
+  examImportanceTa?: string;
+  keyFactsEn?: string;
+  keyFactsTa?: string;
+  prelimsNotesEn?: string;
+  prelimsNotesTa?: string;
+  mainsNotesEn?: string;
+  mainsNotesTa?: string;
+  videoUrl?: string;
+  category: string;
+  publishedDate: string;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+  quizzes?: CurrentAffairQuiz[];
+  _count?: {
+    quizzes: number;
+  };
+}
+
+export interface MonthlyMagazine {
+  id: string;
+  title: string;
+  month: number;
+  year: number;
+  pdfUrl: string;
+  publishedAt: string;
+}
+
+export interface GovernmentScheme {
+  id: string;
+  titleEn: string;
+  titleTa?: string;
+  descriptionEn: string;
+  descriptionTa?: string;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ImportantDate {
+  id: string;
+  titleEn: string;
+  titleTa?: string;
+  date: string;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
