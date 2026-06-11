@@ -12,7 +12,8 @@ import {
   User as UserIcon,
   ChevronRight,
   Image,
-  Newspaper
+  Newspaper,
+  Library
 } from 'lucide-react';
 
 interface NavItem {
@@ -35,6 +36,7 @@ export default function MainLayoutShell() {
     { name: 'Tests & Question Bank', path: '/tests', icon: GraduationCap },
     { name: 'Banners', path: '/banners', icon: Image },
     { name: 'Current Affairs', path: '/current-affairs', icon: Newspaper },
+    { name: 'Study Library', path: '/study-materials', icon: Library },
   ];
 
   const handleLogout = () => {

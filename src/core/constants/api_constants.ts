@@ -65,4 +65,10 @@ export const ApiConstants = {
     datesAll: '/current-affairs/important-dates/all',
     dates: '/current-affairs/important-dates',
   },
+  studyMaterials: {
+    base: '/study-materials',
+    categories: '/study-materials/categories',
+    categoryDetail: (id: string) => `/study-materials/categories/${id}`,
+    detail: (id: string) => `/study-materials/${id}`,
+  },
 } as const;

@@ -14,6 +14,7 @@ const TestsPage = React.lazy(() => import('../../modules/tests/pages/TestsPage')
 const CategoryDetailPage = React.lazy(() => import('../../modules/tests/pages/CategoryDetailPage'));
 const BannerListPage = React.lazy(() => import('../../modules/banners/pages/BannerListPage'));
 const CurrentAffairsPage = React.lazy(() => import('../../modules/current-affairs/pages/CurrentAffairsPage'));
+const StudyMaterialsPage = React.lazy(() => import('../../modules/study-materials/pages/StudyMaterialsPage'));
 
 // Loading fallback component
 const SuspenseFallback = () => (
@@ -98,6 +99,14 @@ export const router = createBrowserRouter([
         element: (
           <React.Suspense fallback={<SuspenseFallback />}>
             <CurrentAffairsPage />
+          </React.Suspense>
+        ),
+      },
+      {
+        path: 'study-materials',
+        element: (
+          <React.Suspense fallback={<SuspenseFallback />}>
+            <StudyMaterialsPage />
           </React.Suspense>
         ),
       },

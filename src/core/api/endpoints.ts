@@ -31,7 +31,10 @@ import type {
   CurrentAffairQuiz,
   MonthlyMagazine,
   GovernmentScheme,
-  ImportantDate
+  ImportantDate,
+  StudyMaterial,
+  StudyMaterialCategory,
+  StudyMaterialVersion
 } from '../types';
 
 export type { 
@@ -60,7 +63,10 @@ export type {
   CurrentAffairQuiz,
   MonthlyMagazine,
   GovernmentScheme,
-  ImportantDate
+  ImportantDate,
+  StudyMaterial,
+  StudyMaterialCategory,
+  StudyMaterialVersion
 };
 
 // ==========================================
@@ -937,6 +943,132 @@ export function useCreateDate() {
     },
   });
 }
+
+// ==========================================
+// STUDY MATERIALS HOOKS
+// ==========================================
+
+export function useStudyCategoriesList() {
+  return useQuery<{ data: StudyMaterialCategory[] }>({
+    queryKey: ['studyCategories'],
+    queryFn: async () => {
+      const response = await apiClient.get(ApiConstants.studyMaterials.categories);
+      return response.data;
+    },
+  });
+}
+
+export function useCreateStudyCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name: string; description?: string }) => {
+      const response = await apiClient.post(ApiConstants.studyMaterials.categories, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['studyCategories'] });
+    },
+  });
+}
+
+export function useDeleteStudyCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.delete(ApiConstants.studyMaterials.categoryDetail(id));
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['studyCategories'] });
+    },
+  });
+}
+
+export function useStudyMaterialsAdminList(filters?: { categoryId?: string; status?: string; search?: string }) {
+  return useQuery<{ data: StudyMaterial[] }>({
+    queryKey: ['studyMaterialsAdmin', filters],
+    queryFn: async () => {
+      const response = await apiClient.get(ApiConstants.studyMaterials.base, { params: filters });
+      return response.data;
+    },
+  });
+}
+
+export function useCreateStudyMaterial() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ title, description, categoryId, accessType, status, file }: {
+      title: string;
+      description?: string;
+      categoryId: string;
+      accessType: string;
+      status: string;
+      file: File;
+    }) => {
+      const formData = new FormData();
+      formData.append('title', title);
+      if (description) formData.append('description', description);
+      formData.append('categoryId', categoryId);
+      formData.append('accessType', accessType);
+      formData.append('status', status);
+      formData.append('file', file);
+
+      const response = await apiClient.post(ApiConstants.studyMaterials.base, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['studyMaterialsAdmin'] });
+    },
+  });
+}
+
+export function useUpdateStudyMaterial() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, title, description, categoryId, accessType, status, file }: {
+      id: string;
+      title?: string;
+      description?: string;
+      categoryId?: string;
+      accessType?: string;
+      status?: string;
+      file?: File;
+    }) => {
+      const formData = new FormData();
+      if (title) formData.append('title', title);
+      if (description) formData.append('description', description);
+      if (categoryId) formData.append('categoryId', categoryId);
+      if (accessType) formData.append('accessType', accessType);
+      if (status) formData.append('status', status);
+      if (file) formData.append('file', file);
+
+      const response = await apiClient.put(ApiConstants.studyMaterials.detail(id), formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['studyMaterialsAdmin'] });
+      queryClient.invalidateQueries({ queryKey: ['studyMaterialDetail', variables.id] });
+    },
+  });
+}
+
+export function useDeleteStudyMaterial() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.delete(ApiConstants.studyMaterials.detail(id));
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['studyMaterialsAdmin'] });
+    },
+  });
+}
+
 
 
 

@@ -374,3 +374,40 @@ export interface ImportantDate {
   updatedAt: string;
 }
 
+export interface StudyMaterialCategory {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface StudyMaterialVersion {
+  id: string;
+  materialId: string;
+  version: number;
+  fileUrl: string;
+  fileSize: number;
+  fileType: string;
+  createdAt: string;
+}
+
+export interface StudyMaterial {
+  id: string;
+  title: string;
+  description?: string;
+  categoryId: string;
+  subjectId?: string | null;
+  topicId?: string | null;
+  fileUrl: string;
+  fileSize: number;
+  fileType: string;
+  accessType: 'FREE' | 'PREMIUM' | 'COURSE_RESTRICTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  uploadedById?: string | null;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  category?: StudyMaterialCategory;
+  versions?: StudyMaterialVersion[];
+}
+
+
