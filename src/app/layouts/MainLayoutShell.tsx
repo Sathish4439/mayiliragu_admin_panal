@@ -14,7 +14,8 @@ import {
   Image,
   Newspaper,
   Library,
-  TrendingUp
+  TrendingUp,
+  ShoppingBag
 } from 'lucide-react';
 
 interface NavItem {
@@ -38,6 +39,7 @@ export default function MainLayoutShell() {
     { name: 'Banners', path: '/banners', icon: Image },
     { name: 'Current Affairs', path: '/current-affairs', icon: Newspaper },
     { name: 'Study Library', path: '/study-materials', icon: Library },
+    { name: 'Book Store', path: '/book-store', icon: ShoppingBag },
     { name: 'Performance Analytics', path: '/performance-analytics', icon: TrendingUp },
   ];
 
