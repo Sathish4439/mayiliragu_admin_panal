@@ -102,7 +102,7 @@ export function useCoursesList(page: number, limit: number) {
       const response = await apiClient.get(ApiConstants.courses.base, {
         params: { page, limit },
       });
-      return response.data;
+      return response.data.data;
     },
   });
 }
@@ -112,7 +112,7 @@ export function useCourseDetail(courseId: string) {
     queryKey: ['course', courseId],
     queryFn: async () => {
       const response = await apiClient.get(ApiConstants.courses.detail(courseId));
-      return response.data;
+      return response.data.data;
     },
     enabled: !!courseId,
   });
@@ -596,7 +596,7 @@ export function useBannersAdminList() {
     queryKey: ['bannersAdmin'],
     queryFn: async () => {
       const response = await apiClient.get(ApiConstants.banners.admin);
-      return response.data;
+      return response.data.data;
     },
   });
 }

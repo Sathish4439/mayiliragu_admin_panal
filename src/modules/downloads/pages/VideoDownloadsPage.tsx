@@ -31,8 +31,16 @@ export default function VideoDownloadsPage() {
     limit: 15
   });
 
-  const logs: DownloadLog[] = data?.data || [];
-  const meta = data?.meta || { totalPages: 1, totalItems: 0 };
+  const rawLogs = data?.data || [];
+  const logs: DownloadLog[] = rawLogs.map((log: any) => ({
+    id: log.id,
+    studentName: log.student?.name || 'Unknown',
+    studentEmail: log.student?.email || 'N/A',
+    lessonTitle: log.lesson?.title || 'Unknown Lesson',
+    courseTitle: log.lesson?.module?.course?.title || 'N/A',
+    downloadedAt: log.downloadedAt,
+  }));
+  const meta = { totalPages: 1, totalItems: logs.length };
 
   return (
     <div className="p-6 sm:p-8 space-y-6 animate-fade-in relative">
