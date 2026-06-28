@@ -396,6 +396,19 @@ export default function StudentManagementPage() {
     setEditForm((prev: any) => ({ ...prev, targetExams: updated }));
   };
 
+  // Calculate totals for payment tab
+  const totalPaid = useMemo(() => {
+    if (!profile?.payments) return 0;
+    return profile.payments.reduce((acc: number, curr: any) => acc + curr.amountPaid, 0);
+  }, [profile?.payments]);
+
+  const balanceFee = useMemo(() => {
+    if (!profile) return 0;
+    const fee = profile.courseFee || 0;
+    const disc = profile.discount || 0;
+    return Math.max(0, fee - disc - totalPaid);
+  }, [profile, totalPaid]);
+
   if (isStudentsError) {
     return (
       <div className="p-8 max-w-lg mx-auto mt-12 bg-red-50 border border-red-200 rounded-3xl text-center space-y-4">
@@ -410,19 +423,6 @@ export default function StudentManagementPage() {
       </div>
     );
   }
-
-  // Calculate totals for payment tab
-  const totalPaid = useMemo(() => {
-    if (!profile?.payments) return 0;
-    return profile.payments.reduce((acc: number, curr: any) => acc + curr.amountPaid, 0);
-  }, [profile?.payments]);
-
-  const balanceFee = useMemo(() => {
-    if (!profile) return 0;
-    const fee = profile.courseFee || 0;
-    const disc = profile.discount || 0;
-    return Math.max(0, fee - disc - totalPaid);
-  }, [profile, totalPaid]);
 
   return (
     <div className="flex h-[calc(100vh-64px)] w-full overflow-hidden bg-gradient-to-br from-background-start via-[#EFF5FF] to-background-end animate-fade-in">

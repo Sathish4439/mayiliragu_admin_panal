@@ -1,14 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Image as ImageIcon, Loader2, Upload } from 'lucide-react';
 import type { Banner } from '../../../core/types';
 
 // Form Validation Schema
 export const bannerSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100),
-  imageUrl: z.string().min(1, 'Image URL is required').url('Must be a valid URL'),
+  imageUrl: z.string().optional(),
   linkUrl: z.string().nullable().optional(),
   order: z.number().int().min(0, 'Order must be 0 or greater'),
   isActive: z.boolean(),
@@ -19,7 +19,7 @@ export type BannerFormValues = z.infer<typeof bannerSchema>;
 interface BannerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (values: BannerFormValues) => Promise<void>;
+  onSubmit: (values: BannerFormValues, file: File | null) => Promise<void>;
   editingBanner: Banner | null;
   defaultOrder: number;
 }
@@ -31,6 +31,10 @@ export default function BannerModal({
   editingBanner,
   defaultOrder,
 }: BannerModalProps) {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -49,9 +53,36 @@ export default function BannerModal({
   });
 
   const watchImageUrl = watch('imageUrl');
+  const activePreviewUrl = previewUrl || watchImageUrl;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setFileError(null);
+      
+      // Clean up previous preview url if it exists
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setFileError(null);
+
       if (editingBanner) {
         reset({
           title: editingBanner.title,
@@ -70,24 +101,38 @@ export default function BannerModal({
         });
       }
     }
+
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
   }, [isOpen, editingBanner, defaultOrder, reset]);
+
+  const handleFormSubmit = async (values: BannerFormValues) => {
+    if (!values.imageUrl && !selectedFile) {
+      setFileError('Please upload an image from local device');
+      return;
+    }
+    await onSubmit(values, selectedFile);
+  };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-xl bg-cardBg border border-border/80 rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300">
-        <div className="p-6 sm:p-8 space-y-6">
+      <div className="w-full max-w-xl bg-cardBg border border-border/80 rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 max-h-[90vh] flex flex-col">
+        <div className="p-6 sm:p-8 space-y-5 overflow-y-auto flex-1">
           <div>
             <h3 className="text-lg font-black text-text-primary tracking-tight">
               {editingBanner ? 'Edit Promotion Banner' : 'Add Promotion Banner'}
             </h3>
             <p className="text-xs text-text-secondary mt-1 font-semibold">
-              Specify banner title, image URL, order, and targeted course link.
+              Specify banner title, upload an image, order, and targeted course link.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
             {/* Title */}
             <div className="space-y-1.5">
               <label className="block text-[10px] font-black text-text-primary uppercase tracking-wider">
@@ -107,22 +152,47 @@ export default function BannerModal({
               )}
             </div>
 
-            {/* Image URL */}
+            {/* Image Source Selection */}
             <div className="space-y-1.5">
               <label className="block text-[10px] font-black text-text-primary uppercase tracking-wider">
-                Banner Image URL
+                Banner Image
               </label>
-              <input
-                type="text"
-                placeholder="https://images.unsplash.com/... or hosted URL"
-                {...register('imageUrl')}
-                disabled={isSubmitting}
-                className={`w-full px-4 py-2.5 rounded-xl border text-xs font-semibold outline-none transition-all ${
-                  errors.imageUrl ? 'border-error focus:ring-error focus:border-error bg-red-50/10' : 'border-border focus:ring-accent focus:border-accent'
-                } text-text-primary bg-slate-50/20`}
-              />
-              {errors.imageUrl && (
-                <p className="text-[10px] text-error font-semibold pl-1">{errors.imageUrl.message}</p>
+              <div className="border border-border/80 rounded-2xl p-4 space-y-3 bg-slate-50/10">
+                {/* File Upload zone */}
+                <div className="border border-dashed border-border rounded-xl p-4 text-center hover:bg-slate-50/20 transition-all cursor-pointer relative">
+                  <input
+                    type="file"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    accept="image/*"
+                    disabled={isSubmitting}
+                  />
+                  <div className="flex flex-col items-center space-y-1">
+                    <Upload className="w-5 h-5 text-accent" />
+                    <p className="text-xs font-semibold text-text-primary">
+                      {selectedFile ? 'Change chosen file' : 'Click to select image from local device'}
+                    </p>
+                    <p className="text-[9px] text-text-secondary">
+                      {selectedFile ? `${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)} KB)` : 'Supported: JPEG, PNG, WEBP, SVG (Max 10MB)'}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedFile && (
+                  <div className="flex items-center justify-between p-2 bg-accent/5 border border-accent/20 rounded-xl">
+                    <span className="text-[10px] font-bold text-text-primary truncate max-w-[80%]">{selectedFile.name}</span>
+                    <button
+                      type="button"
+                      onClick={handleRemoveFile}
+                      className="text-[10px] font-black text-red-650 hover:underline"
+                    >
+                      Remove file
+                    </button>
+                  </div>
+                )}
+              </div>
+              {fileError && (
+                <p className="text-[10px] text-error font-semibold pl-1">{fileError}</p>
               )}
             </div>
 
@@ -132,9 +202,9 @@ export default function BannerModal({
                 Live Banner Preview
               </label>
               <div className="aspect-[3/1] rounded-2xl bg-slate-100 border border-border/80 overflow-hidden flex items-center justify-center relative">
-                {watchImageUrl && watchImageUrl.startsWith('http') ? (
+                {activePreviewUrl ? (
                   <img 
-                    src={watchImageUrl} 
+                    src={activePreviewUrl} 
                     alt="Preview" 
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -144,7 +214,7 @@ export default function BannerModal({
                 ) : (
                   <div className="text-center p-4">
                     <ImageIcon className="w-6 h-6 text-gray-350 mx-auto mb-1" />
-                    <span className="text-[10px] text-text-secondary font-semibold">Enter image URL to view preview</span>
+                    <span className="text-[10px] text-text-secondary font-semibold font-sans">No image selected</span>
                   </div>
                 )}
               </div>
@@ -183,20 +253,6 @@ export default function BannerModal({
                   <p className="text-[10px] text-error font-semibold pl-1">{errors.order.message}</p>
                 )}
               </div>
-            </div>
-
-            {/* Is Active Checkbox Toggle */}
-            <div className="flex items-center space-x-2.5 py-1.5">
-              <input
-                type="checkbox"
-                id="isActive"
-                {...register('isActive')}
-                disabled={isSubmitting}
-                className="w-4 h-4 rounded text-accent focus:ring-accent border-border"
-              />
-              <label htmlFor="isActive" className="text-xs font-bold text-text-primary select-none cursor-pointer">
-                Enable banner instantly (Visible in mobile app)
-              </label>
             </div>
 
             {/* Buttons controls */}

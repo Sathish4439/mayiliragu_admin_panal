@@ -604,8 +604,27 @@ export function useBannersAdminList() {
 export function useCreateBanner() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { title: string; imageUrl: string; linkUrl?: string | null; order: number; isActive: boolean }) => {
-      const response = await apiClient.post(ApiConstants.banners.base, data);
+    mutationFn: async ({ title, imageUrl, linkUrl, order, isActive, file }: {
+      title: string;
+      imageUrl?: string;
+      linkUrl?: string | null;
+      order: number;
+      isActive: boolean;
+      file?: File;
+    }) => {
+      const formData = new FormData();
+      formData.append('title', title);
+      if (imageUrl) formData.append('imageUrl', imageUrl);
+      if (linkUrl) formData.append('linkUrl', linkUrl);
+      formData.append('order', String(order));
+      formData.append('isActive', String(isActive));
+      if (file) {
+        formData.append('file', file);
+      }
+
+      const response = await apiClient.post(ApiConstants.banners.base, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -617,8 +636,20 @@ export function useCreateBanner() {
 export function useUpdateBanner() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Banner> }) => {
-      const response = await apiClient.put(ApiConstants.banners.detail(id), data);
+    mutationFn: async ({ id, data, file }: { id: string; data: Partial<Banner>; file?: File }) => {
+      const formData = new FormData();
+      if (data.title !== undefined) formData.append('title', data.title);
+      if (data.imageUrl !== undefined) formData.append('imageUrl', data.imageUrl);
+      if (data.linkUrl !== undefined) formData.append('linkUrl', data.linkUrl || '');
+      if (data.order !== undefined) formData.append('order', String(data.order));
+      if (data.isActive !== undefined) formData.append('isActive', String(data.isActive));
+      if (file) {
+        formData.append('file', file);
+      }
+
+      const response = await apiClient.put(ApiConstants.banners.detail(id), formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       return response.data;
     },
     onSuccess: () => {

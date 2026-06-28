@@ -41,7 +41,15 @@ export default function LoginPage() {
       login(user as User, accessToken, refreshToken);
       navigate('/dashboard');
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Login failed. Please verify your credentials.';
+      let msg = err.response?.data?.message || err.message || 'Login failed. Please verify your credentials.';
+      if (
+        msg.toLowerCase().includes('prisma') ||
+        msg.toLowerCase().includes('database') ||
+        msg.toLowerCase().includes('aivencloud') ||
+        msg.toLowerCase().includes('reach database')
+      ) {
+        msg = 'Unable to connect to the database server. Please try again later.';
+      }
       setErrorMsg(msg);
     } finally {
       setIsLoading(false);

@@ -51,7 +51,7 @@ export default function BannerListPage() {
     setEditingBanner(null);
   };
 
-  const onSubmit = async (values: BannerFormValues) => {
+  const onSubmit = async (values: BannerFormValues, file: File | null) => {
     try {
       if (editingBanner) {
         await updateBannerMutation.mutateAsync({
@@ -62,7 +62,8 @@ export default function BannerListPage() {
             linkUrl: values.linkUrl || null,
             order: values.order,
             isActive: values.isActive,
-          }
+          },
+          file: file || undefined,
         });
       } else {
         await createBannerMutation.mutateAsync({
@@ -71,6 +72,7 @@ export default function BannerListPage() {
           linkUrl: values.linkUrl || null,
           order: values.order,
           isActive: values.isActive,
+          file: file || undefined,
         });
       }
       handleCloseDialog();
